@@ -1,5 +1,3 @@
-# Left off with experimenting with time-tuples instead of asc string
-
 import kivy
 from kivy.core.window import Window
 from kivy.app import App
@@ -8,8 +6,11 @@ from kivy.uix.widget import Widget
 from kivy.uix.popup import Popup
 import time
 import re
+import csv
 
 Window.size = (350, 325)
+start_day = 0
+stop_day = 0
 
 class MyGrid(Widget):
 
@@ -27,21 +28,26 @@ class MyGrid(Widget):
 
     # Start Button Event
     def start(self):
-        tm = time.localtime(time.time())
-        print(tm)
+
+        # time tuple
         current_time = get_time()
-        hr = tm[3]
-        min = tm[4]
-        sec = tm[5]
-        print(str(hr).zfill(2) + "." + str(min).zfill(2) + "." + str(sec).zfill(2))
-        # hr = current_time[0:2]
-        # min = current_time[3:5]
-        # sec = current_time[6:]
+        global start_day
+        start_day = current_time[0]
+        hr = current_time[1]
+        min = current_time[2]
+        sec = current_time[3]
+        time_to_str = str(hr).zfill(2) + ":" + str(min).zfill(2) + ":" + str(sec).zfill(2)
 
         # Validate that hours and minutes are 2-digit numbers
-        if re.match("\d{2}[\./,`=*+:;\"'\\\-]\d{2}$", self.startentry.text):
-            start_entry_hr = self.startentry.text[0:2]
-            start_entry_min = self.startentry.text[3:]
+        if re.match("\d{1,2}[\./,`=*+:;\"'\\\-]\d{2}$", self.startentry.text):
+
+            # if hr is 1 or 2 digits
+            if len(self.startentry.text) == 4:
+                start_entry_hr = self.startentry.text[0]
+                start_entry_min = self.startentry.text[2:]
+            else:
+                start_entry_hr = self.startentry.text[0:2]
+                start_entry_min = self.startentry.text[3:]
 
             # Validate that hours are from 00 to 23
             # Popup error message if not
@@ -58,11 +64,11 @@ class MyGrid(Widget):
             else:
 
                 # if time is between midnight and 1am
-                if int(hr) == 0 and int(start_entry_hr) == 12:
+                if hr == 0 and int(start_entry_hr) == 12:
                     self.startentry.text = "00." + start_entry_min + ".00"
 
                 # Convert to military time if pm
-                elif int(hr) > 12 and int(start_entry_hr) < 12:
+                elif hr > 12 and int(start_entry_hr) < 12:
                     add12 = int(start_entry_hr) + 12
                     self.startentry.text = str(add12) + "." + start_entry_min + ".00"
                     self.startbtn.disabled = True
@@ -70,7 +76,7 @@ class MyGrid(Widget):
                     self.startentry.disabled = True
 
                 else:
-                    self.startentry.text = start_entry_hr + "." + start_entry_min + ".00"
+                    self.startentry.text = start_entry_hr.zfill(2) + "." + start_entry_min + ".00"
                     self.startbtn.disabled = True
                     self.stopbtn.disabled = False
                     self.startentry.disabled = True
@@ -79,7 +85,7 @@ class MyGrid(Widget):
         # Disable start button & entrybox
         # Enable stop button
         elif self.startentry.text == "":
-            self.startentry.text = get_time()
+            self.startentry.text = time_to_str
             self.startbtn.disabled = True
             self.stopbtn.disabled = False
             self.startentry.disabled = True
@@ -90,15 +96,24 @@ class MyGrid(Widget):
 
     # Stop Button Event
     def stop(self):
+
+        # time tuple
         current_time = get_time()
-        hr = current_time[0:2]
-        min = current_time[3:5]
-        sec = current_time[6:]
+        global stop_day
+        stop_day = current_time[0]
+        hr = current_time[1]
+        min = current_time[2]
+        sec = current_time[3]
+        time_to_str = str(hr).zfill(2) + ":" + str(min).zfill(2) + ":" + str(sec).zfill(2)
 
         # Validate that hours and minutes are 2-digit numbers
-        if re.match("\d{2}[\./,`=*+:;\"'\\\-]\d{2}$", self.stopentry.text):
-            stop_entry_hr = self.stopentry.text[0:2]
-            stop_entry_min = self.stopentry.text[3:]
+        if re.match("\d{1,2}[\./,`=*+:;\"'\\\-]\d{2}$", self.stopentry.text):
+            if len(self.stopentry.text) == 4:
+                stop_entry_hr = self.stopentry.text[0]
+                stop_entry_min = self.stopentry.text[2:]
+            else:
+                stop_entry_hr = self.stopentry.text[0:2]
+                stop_entry_min = self.stopentry.text[3:]
 
             # Validate that hours are from 00 to 23
             # Popup error message if not
@@ -113,13 +128,13 @@ class MyGrid(Widget):
             # Add ".00" to end if manually entered and diasable start button and
             #   entry, and enable stop button
             else:
-                if int(hr) > 12 and int(stop_entry_hr) < 12:
+                if hr > 12 and int(stop_entry_hr) < 12:
                     add12 = int(stop_entry_hr) + 12
                     self.stopentry.text = str(add12) + "." + stop_entry_min + ".00"
                     self.stopbtn.disabled = True
                     self.stopentry.disabled = True
                 else:
-                    self.stopentry.text = stop_entry_hr + "." + stop_entry_min + ".00"
+                    self.stopentry.text = stop_entry_hr.zfill(2) + "." + stop_entry_min + ".00"
                     self.stopbtn.disabled = True
                     self.stopentry.disabled = True
 
@@ -127,7 +142,7 @@ class MyGrid(Widget):
         # Disable start button & entrybox
         # Enable stop button
         elif self.stopentry.text == "":
-            self.stopentry.text = get_time()
+            self.stopentry.text = time_to_str
             self.stopbtn.disabled = True
             self.stopentry.disabled = True
 
@@ -137,6 +152,9 @@ class MyGrid(Widget):
 
     # Submit Button Event
     def submit(self):
+
+        print("start day:", start_day)
+        print("stop day:", stop_day)
 
         # Checks that start/stop times were entered correctly
         if self.startbtn.disabled != True or self.stopbtn.disabled != True:
@@ -148,28 +166,38 @@ class MyGrid(Widget):
             validate(5)
 
         else:
+
             start_hr = self.startentry.text[0:2]
             start_min = self.startentry.text[3:5]
             start_sec = self.startentry.text[6:]
-            start_tot = ((int(start_hr) * 3600)
-                        + (int(start_min) * 60)
-                        + int(start_sec))
+
             stop_hr = self.stopentry.text[0:2]
             stop_min = self.stopentry.text[3:5]
             stop_sec = self.stopentry.text[6:]
+
+            # if stop time is in the next day
+            if stop_day > start_day:
+                stop_hr = str(int(stop_hr) + 24)
+
+            start_tot = ((int(start_hr) * 3600)
+                        + (int(start_min) * 60)
+                        + int(start_sec))
+
             stop_tot = ((int(stop_hr) * 3600)
                         + (int(stop_min) * 60)
                         + int(stop_sec))
-            tot = stop_tot - start_tot
-            print(start_tot, stop_tot, tot)
 
-            if tot < 0:
+            tot_sec = stop_tot - start_tot
+            tot_hr = tot_sec / 3600
+
+            if tot_sec < 0:
                 self.startentry.disabled = False
                 self.stopentry.disabled = False
                 validate(6)
 
-            # If input from textbox
             else:
+
+                # activity is manually entered, add it to the front of the activities list
                 if self.activity_input.text != "":
                     self.activity_dropdown.values.insert(0, self.activity_input.text)
                     print(self.activity_input.text)
@@ -179,7 +207,8 @@ class MyGrid(Widget):
                     print(self.activity_dropdown.text)
 
                 print("Start:", self.startentry.text)
-                print("Stop:", self.stopentry.text, "\n")
+                print("Stop:", self.stopentry.text)
+                print(start_tot, stop_tot, tot_sec, tot_hr, "\n")
 
                 # Resets everthing back to default
                 MyGrid.default(self)
@@ -239,12 +268,12 @@ def validate(id):
         popup.open()
 
 def get_time():
-    asc = time.asctime(time.localtime(time.time()))
-    hour = asc[-13:-11]
-    minute = asc[-10:-8]
-    second = asc[-7:-5]
-    current_time = hour + "." + minute + "." + second
-    return current_time
+    time_tup = time.localtime(time.time())
+    day = time_tup[2]
+    hr = time_tup[3]
+    min = time_tup[4]
+    sec = time_tup[5]
+    return (day, hr, min, sec)
 
 if __name__ == "__main__":
     MyApp().run()
