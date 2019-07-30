@@ -1,13 +1,15 @@
-import kivy
+import os, getpass, time, re, csv, kivy
 from kivy.core.window import Window
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 from kivy.uix.popup import Popup
-import time
-import re
-import csv
 
+# try:
+#     os.path.getfilsize("")
+# except Exception as e:
+#     raise
+print(getpass.getuser())
 Window.size = (350, 325)
 start_day = 0
 stop_day = 0
@@ -152,9 +154,6 @@ class MyGrid(Widget):
 
     # Submit Button Event
     def submit(self):
-
-        print("start day:", start_day)
-        print("stop day:", stop_day)
 
         # Checks that start/stop times were entered correctly
         if self.startbtn.disabled != True or self.stopbtn.disabled != True:
